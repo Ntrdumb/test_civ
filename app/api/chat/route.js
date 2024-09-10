@@ -25,14 +25,8 @@ import { promises as fs } from 'fs';
 //     });
 //   }
 
-export async function GET(req) {
-    const jsonDirectory = path.join(process.cwd(), 'public', 'data');
-    const filePath = path.join(jsonDirectory, 'accounting_data_response.json');
-    const fileContents = await fs.readFile(filePath, 'utf8');
-    return new Response(fileContents, {
-        headers: { 'Content-Type': 'application/json' },
-    });
-}
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   const { question } = await req.json();
@@ -74,6 +68,15 @@ export async function POST(req) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
+}
+
+export async function GET(req) {
+  const jsonDirectory = path.join(process.cwd(), 'public', 'data');
+  const filePath = path.join(jsonDirectory, 'accounting_data_response.json');
+  const fileContents = await fs.readFile(filePath, 'utf8');
+  return new Response(fileContents, {
+      headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 // export async function GET(req) {
