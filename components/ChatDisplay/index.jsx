@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatInput from '../ChatInput';
 
-export default function ChatDisplay({ changeView }) {
+export default function ChatDisplay({ changeView, updateDateRange }) {
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
 
@@ -26,6 +26,13 @@ export default function ChatDisplay({ changeView }) {
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     } else if (result.nature === 'selection') {
       changeView(result.schema);  // Assuming changeView changes the UI based on result
+
+      // Extract the two dates from the "periode" and pass to updateDateRange
+      if (result.selection && result.selection.periode) {
+        const [startDate, endDate] = result.selection.periode;
+        updateDateRange([startDate, endDate]); // Pass the dates to the parent component
+      }
+
       const botMessage = {
         type: 'bot',
         text: "Voici ce que j'ai trouvé.",

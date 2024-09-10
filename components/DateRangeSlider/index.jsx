@@ -3,24 +3,28 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import dayjs from 'dayjs';
 
-export default function DateRangeSlider({ minDate, maxDate, onChange }) {
+export default function DateRangeSlider({ minDate, maxDate, onChange, selectedRange }) {
   const minDateObj = dayjs(minDate);
   const maxDateObj = dayjs(maxDate);
 
-  const minTime = minDateObj.valueOf();
-  const maxTime = maxDateObj.valueOf();
+  const minTime = minDateObj.valueOf();  // Convert minDate to milliseconds
+  const maxTime = maxDateObj.valueOf();  // Convert maxDate to milliseconds
 
   const [range, setRange] = useState([minTime, maxTime]);
 
+  // Update the slider range only when the selectedRange prop changes (not min/max)
   useEffect(() => {
-    setRange([minTime, maxTime]); // Update the range when min/max dates change
-  }, [minDate, maxDate]);
+    if (selectedRange) {
+      const [startDate, endDate] = selectedRange;
+      setRange([dayjs(startDate).valueOf(), dayjs(endDate).valueOf()]);
+    }
+  }, [selectedRange]);
 
   const handleSliderChange = (values) => {
     setRange(values);
     const startDate = dayjs(values[0]).format('YYYY-MM-DD');
     const endDate = dayjs(values[1]).format('YYYY-MM-DD');
-    onChange([startDate, endDate]); // Pass the new date range to the parent component
+    onChange([startDate, endDate]); // Notify parent about the new range
   };
 
   return (

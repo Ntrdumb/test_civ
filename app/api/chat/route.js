@@ -28,6 +28,27 @@ import { promises as fs } from 'fs';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+// export async function POST(req) {
+//     const { question } = await req.json();
+  
+//     // HArdcoded response
+//     const response = {
+//       nature: "selection",
+//       schema: "categories_depense",
+//       selection: {
+//           comptes: null,
+//           periode: [
+//               "2022-10-01",
+//               "2023-10-01"
+//           ]
+//       }
+//   }
+  
+//     return new Response(JSON.stringify(response), {
+//       headers: { 'Content-Type': 'application/json' },
+//     });
+//   }
+
 export async function POST(req) {
   const { question } = await req.json();
 

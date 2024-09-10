@@ -86,6 +86,11 @@ export default function Home() {
     });
   };
 
+  // Function to update date range based on API response in ChatDisplay.js
+  const updateDateRange = (newRange) => {
+    setDateRange(newRange);
+  };
+  
   const changeView = (newView) => {
     if (newView === 'solde_compte') {
       setView('balances');
@@ -109,6 +114,7 @@ export default function Home() {
               minDate={minDate} 
               maxDate={maxDate} 
               onChange={handleDateRangeChange} 
+              selectedRange={dateRange} 
             />
           )}
 
@@ -167,7 +173,7 @@ export default function Home() {
           <h3 className="text-xl mb-2">Chat Display</h3>
           <div className="flex flex-col h-full">
             <div className="flex-grow overflow-y-auto">
-              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} />
+              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} updateDateRange={updateDateRange} />
             </div>
           </div>
         </section>
