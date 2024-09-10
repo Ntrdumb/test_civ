@@ -10,6 +10,7 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'civision-green': '#37a275',  // Adding your custom green color
       },
     },
   },
