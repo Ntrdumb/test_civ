@@ -25,7 +25,7 @@ import { promises as fs } from 'fs';
 //     });
 //   }
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
