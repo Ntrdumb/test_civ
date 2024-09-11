@@ -5,63 +5,65 @@ import ChatLinechart from '@/components/ChatLinechart';
 import Checkbox from '@/components/FilterCheckboxes';
 import ChatPaymentsTable from '@/components/ChatPaymentsTable';
 import DateRangeSlider from '@/components/DateRangeSlider';
+import MultiSelect from '@/components/MultiSelect';
 import { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
+// Extend dayjs with the plugins
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 export default function Home() {
   const [chartData, setChartData] = useState({ balance: {}, payments: {} });
-  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [balanceSelectedKeys, setBalanceSelectedKeys] = useState([]);
+  const [balanceDateRange, setBalanceDateRange] = useState(null);
+  const [paymentsDateRange, setPaymentsDateRange] = useState(null);
   const [view, setView] = useState('balances');
-  const [dateRange, setDateRange] = useState(null); // Date range state
 
-  // Extract all possible keys from chartData to generate checkboxes
-  const allCheckboxKeys = useMemo(() => {
-    // console.log("ALL DATA________________");
-    // console.log(chartData);
-    const balanceKeys = chartData.balance ? Object.keys(chartData.balance).flatMap(project => 
-      Object.keys(chartData.balance[project]).map(date => `${project}_balance`)
-    ) : [];
-    // const paymentKeys = chartData.payments ? Object.keys(chartData.payments.project_number || {}).map(projectNum => `${projectNum}_payment`) : [];
-    
-    // console.log("PAYMENTS KEYS");
-    // console.log(paymentKeys);
+  const balanceData = chartData.balance;
+  const paymentsData = chartData.payments;
 
-    // return Array.from(new Set([...balanceKeys, ...paymentKeys]));
-    return Array.from(new Set([...balanceKeys]));
-  }, [chartData]);
-
-  // console.log("All keys")
-  // console.log(allCheckboxKeys);
-
-  // Initialize all keys as selected if they are present
-  const initializedSelectedKeys = useMemo(() => allCheckboxKeys, [allCheckboxKeys]);
-
-  if (selectedKeys.length === 0 && initializedSelectedKeys.length > 0) {
-    setSelectedKeys(initializedSelectedKeys);
-  }
+  // Extract project numbers for balances
+  const balanceProjectOptions = useMemo(() => {
+    return balanceData ? Object.keys(balanceData) : [];
+  }, [balanceData]);
 
   // Extract all dates from balance for min and max dates
   const balanceDates = useMemo(() => {
-    const allDates = chartData.balance 
-      ? Object.values(chartData.balance).flatMap(project => Object.keys(project))
+    const allDates = balanceData 
+      ? Object.values(balanceData).flatMap(project => Object.keys(project))
       : [];
     return allDates.sort((a, b) => dayjs(a).isBefore(dayjs(b)) ? -1 : 1);
-  }, [chartData.balance]);
+  }, [balanceData]);
 
-  const minDate = balanceDates[0];
-  const maxDate = balanceDates[balanceDates.length - 1];
+  console.log("BALANCE DATE TIME");
+  console.log("First " + balanceDates[0]);
+  console.log(balanceDates);
+
+  // Extract all dates from payments for min and max dates
+  const paymentsDates = useMemo(() => {
+    const allDates = paymentsData 
+      ? Object.values(paymentsData).map(payment => payment.date)
+      : [];
+    return allDates.sort((a, b) => dayjs(a).isBefore(dayjs(b)) ? -1 : 1);
+  }, [paymentsData]);
 
   // Fetch data from API and cache it in localStorage
   useEffect(() => {
     const fetchData = async () => {
       const cachedData = localStorage.getItem('cachedChartData');
       if (cachedData) {
-        setChartData(JSON.parse(cachedData));
+        const parsedData = JSON.parse(cachedData);
+        setChartData(parsedData);
+        setBalanceSelectedKeys(Object.keys(parsedData.balance));
       } else {
         try {
           const response = await fetch('/api/chat');
           const data = await response.json();
           setChartData(data);
+          setBalanceSelectedKeys(Object.keys(data.balance));
           localStorage.setItem('cachedChartData', JSON.stringify(data));
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -71,34 +73,31 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Handle DateRangeSlider change
-  const handleDateRangeChange = (range) => {
-    setDateRange(range);
-  };
+  // Handle DateRangeSlider changes
+  const handleBalanceDateRangeChange = (range) => setBalanceDateRange(range);
+  const handlePaymentsDateRangeChange = (range) => setPaymentsDateRange(range);
 
-  // Function to handle checkbox changes
-  const handleCheckboxChange = (key) => {
-    setSelectedKeys(prevSelectedKeys => {
-      const isSelected = prevSelectedKeys.includes(key);
-      return isSelected 
-        ? prevSelectedKeys.filter(item => item !== key) 
-        : [...prevSelectedKeys, key];
+  // Filter payments data based on selected date range
+  const filteredPaymentsData = useMemo(() => {
+    if (!paymentsDateRange || !paymentsData) return paymentsData;
+
+    const [startDate, endDate] = paymentsDateRange;
+
+    return Object.values(paymentsData).filter(payment => {
+      const paymentDate = dayjs(payment.date, 'YYYY-MM-DD');
+      if (!paymentDate.isValid()) return false;
+      return paymentDate.isSameOrAfter(dayjs(startDate)) && paymentDate.isSameOrBefore(dayjs(endDate));
     });
-  };
-
-  // Function to update date range based on API response in ChatDisplay.js
-  const updateDateRange = (newRange) => {
-    setDateRange(newRange);
-  };
+  }, [paymentsDateRange, paymentsData]);
   
   const changeView = (newView) => {
-    if (newView === 'solde_compte') {
-      setView('balances');
-    } else if (newView === 'detail_depense') {
-      setView('payments');
-    } else if (newView === 'categories_depense') {
-      setView('expenses');
-    }
+    setView(newView);
+    // Reset
+    /*if (newView === 'balances') {
+      setBalanceDateRange([balanceDates[0], balanceDates[balanceDates.length - 1]]);
+    } else if (newView === 'payments') {
+      setPaymentsDateRange([paymentsDates[0], paymentsDates[paymentsDates.length - 1]]);
+    } */
   };
 
   return (
@@ -108,28 +107,40 @@ export default function Home() {
         <section className="col-span-2 p-4 bg-gray-200 h-full">
           <h3 className="text-xl mb-2">Filtres</h3>
 
-          {/* Date Range Slider */}
-          {minDate && maxDate && (
-            <DateRangeSlider 
-              minDate={minDate} 
-              maxDate={maxDate} 
-              onChange={handleDateRangeChange} 
-              selectedRange={dateRange} 
-            />
+          {/* Date Range and MultiSelect for Balances */}
+          {view === 'balances' && (
+            <>
+              <DateRangeSlider 
+                minDate={balanceDates[0]} 
+                maxDate={balanceDates[balanceDates.length - 1]} 
+                onChange={handleBalanceDateRangeChange} 
+                selectedRange={balanceDateRange} 
+              />
+              <MultiSelect 
+                options={balanceProjectOptions} 
+                selectedOptions={balanceSelectedKeys} 
+                onChange={setBalanceSelectedKeys} 
+              />
+            </>
+          )}
+          {console.log("BROSKI WHY U START "+balanceDates[0])}
+
+          {/* Date Range for Payments */}
+          {view === 'payments' && (
+            <>
+              <DateRangeSlider 
+                minDate={paymentsDates[0]} 
+                maxDate={paymentsDates[paymentsDates.length - 1]} 
+                onChange={handlePaymentsDateRangeChange} 
+                selectedRange={paymentsDateRange} 
+              />
+            </>
           )}
 
-          <div className="space-y-2">
-            {allCheckboxKeys.map((key) => (
-              <Checkbox
-                key={key}
-                label={key}
-                checked={selectedKeys.includes(key)}
-                onChange={() => handleCheckboxChange(key)}
-              />
-            ))}
-          </div>
+          {/* No filters for Expenses yet */}
+          
         </section>
-
+        
         {/* Section 2 */}
         <section className="col-span-7 p-4 bg-gray-300 h-full">
           <h3 className="text-xl mb-2">Vue</h3>
@@ -137,21 +148,21 @@ export default function Home() {
           <div className="flex justify-center mb-4">
             <button 
               className={`mx-2 px-4 py-2 ${view === 'balances' ? 'bg-civision-green text-white' : 'bg-gray-300'}`}
-              onClick={() => setView('balances')}
+              onClick={() => changeView('balances')}
             >
               Balances
             </button>
 
             <button 
               className={`mx-2 px-4 py-2 ${view === 'payments' ? 'bg-civision-green text-white' : 'bg-gray-300'}`}
-              onClick={() => setView('payments')}
+              onClick={() => changeView('payments')}
             >
               Payments
             </button>
 
             <button 
               className={`mx-2 px-4 py-2 ${view === 'expenses' ? 'bg-civision-green text-white' : 'bg-gray-300'}`}
-              onClick={() => setView('expenses')}
+              onClick={() => changeView('expenses')}
             >
               Expenses
             </button>
@@ -159,11 +170,11 @@ export default function Home() {
 
           {/* Conditionally render line chart or table */}
           {view === 'balances' ? (
-            <ChatLinechart data={chartData} filter={selectedKeys} dateRange={dateRange} />
+            <ChatLinechart data={chartData} filter={balanceSelectedKeys} dateRange={balanceDateRange} />
           ) : view === 'payments' ? (
-            <ChatPaymentsTable payments={chartData.payments} />
+            <ChatPaymentsTable payments={filteredPaymentsData} />
           ) : view === 'expenses' ? (
-            <ChatBarchart data={chartData} filter={selectedKeys} />
+            <ChatBarchart data={chartData} /* filter={selectedKeys}*/ />
           ) : null}
 
         </section>
@@ -173,7 +184,7 @@ export default function Home() {
           <h3 className="text-xl mb-2">Chat Display</h3>
           <div className="flex flex-col h-full">
             <div className="flex-grow overflow-y-auto">
-              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} updateDateRange={updateDateRange} />
+              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} updateDateRange={setBalanceDateRange} />
             </div>
           </div>
         </section>

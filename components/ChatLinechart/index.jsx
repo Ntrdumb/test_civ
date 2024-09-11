@@ -19,6 +19,8 @@ export default function ChatLinechart({ data, filter, dateRange }) {
   // Get the available date range for the chart from the user-selected range or from all balance data
   const [startDate, endDate] = dateRange || [null, null];
 
+  // console.log(data);
+
   // Get all unique dates from balance data if no date range is selected
   const balanceDates = Object.keys(data.balance).flatMap(project =>
     Object.keys(data.balance[project])
@@ -29,36 +31,33 @@ export default function ChatLinechart({ data, filter, dateRange }) {
   const balanceData = allDates.map(date => {
     const dateEntry = { name: date };
     Object.keys(data.balance).forEach(project => {
-      dateEntry[`${project}_balance`] = data.balance[project][date] || null; // Fill missing dates with null
+      dateEntry[`${project}`] = data.balance[project][date] || null; // Fill missing dates with null
     });
     return dateEntry;
   });
 
-  // Filter the data by selected keys (project balances like WF07_balance, WG00_balance, etc.)
+  // Filter the data by selected project keys
   const filteredData = balanceData.map(item => {
     const filteredItem = { name: item.name };
     filter.forEach(key => {
-      if (item[key] !== undefined) {
-        filteredItem[key] = item[key];
+      const projectKey = `${key}`;
+      if (item[projectKey] !== undefined) {
+        filteredItem[projectKey] = item[projectKey];
       }
     });
     return filteredItem;
-  }).filter(item => Object.keys(item).length > 1); // Ensure there's at least one balance value
+  }).filter(item => Object.keys(item).length > 1);
 
   // Extract keys for the line chart (e.g., WF07_balance, WG00_balance)
   const keys = filteredData.length > 0 ? Object.keys(filteredData[0]).filter(key => key !== 'name') : [];
+
 
   return (
     <div style={{ width: '100%', height: 300 }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={filteredData}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
