@@ -27,10 +27,10 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
     } else if (result.nature === 'selection') {
       changeView(result.schema);  // Assuming changeView changes the UI based on result
 
-      // Extract the two dates from the "periode" and pass to updateDateRange
       if (result.selection && result.selection.periode) {
         const [startDate, endDate] = result.selection.periode;
-        updateDateRange([startDate, endDate]); // Pass the dates to the parent component
+        // console.log(startDate, endDate);
+        updateDateRange(result.schema, [startDate, endDate]); // Pass schema and dates
       }
 
       const botMessage = {

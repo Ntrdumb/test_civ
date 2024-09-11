@@ -2,7 +2,7 @@
 import ChatDisplay from '../components/ChatDisplay';
 import ChatBarchart from '../components/ChatBarchart';
 import ChatLinechart from '@/components/ChatLinechart';
-import Checkbox from '@/components/FilterCheckboxes';
+// import Checkbox from '@/components/FilterCheckboxes';
 import ChatPaymentsTable from '@/components/ChatPaymentsTable';
 import DateRangeSlider from '@/components/DateRangeSlider';
 import MultiSelect from '@/components/MultiSelect';
@@ -21,6 +21,7 @@ export default function Home() {
   const [balanceDateRange, setBalanceDateRange] = useState(null);
   const [paymentsDateRange, setPaymentsDateRange] = useState(null);
   const [view, setView] = useState('balances');
+  const [loading, setLoading] = useState(true); 
 
   const balanceData = chartData.balance;
   const paymentsData = chartData.payments;
@@ -32,27 +33,28 @@ export default function Home() {
 
   // Extract all dates from balance for min and max dates
   const balanceDates = useMemo(() => {
-    const allDates = balanceData 
-      ? Object.values(balanceData).flatMap(project => Object.keys(project))
+    const allDates = balanceData
+      ? Object.values(balanceData).flatMap((project) => Object.keys(project))
       : [];
-    return allDates.sort((a, b) => dayjs(a).isBefore(dayjs(b)) ? -1 : 1);
+    return allDates.sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1));
   }, [balanceData]);
 
-  console.log("BALANCE DATE TIME");
-  console.log("First " + balanceDates[0]);
-  console.log(balanceDates);
+  // console.log("BALANCE DATE TIME");
+  // console.log("First " + balanceDates[0]);
+  // console.log("Max " + balanceDates[balanceDates.length - 1]);
 
   // Extract all dates from payments for min and max dates
   const paymentsDates = useMemo(() => {
-    const allDates = paymentsData 
-      ? Object.values(paymentsData).map(payment => payment.date)
+    const allDates = paymentsData
+      ? Object.values(paymentsData).map((payment) => payment.date)
       : [];
-    return allDates.sort((a, b) => dayjs(a).isBefore(dayjs(b)) ? -1 : 1);
+    return allDates.sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1));
   }, [paymentsData]);
 
   // Fetch data from API and cache it in localStorage
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Set loading to true when fetching data
       const cachedData = localStorage.getItem('cachedChartData');
       if (cachedData) {
         const parsedData = JSON.parse(cachedData);
@@ -69,6 +71,7 @@ export default function Home() {
           console.error('Error fetching data:', error);
         }
       }
+      setLoading(false); // Data is fetched, set loading to false
     };
     fetchData();
   }, []);
@@ -76,6 +79,17 @@ export default function Home() {
   // Handle DateRangeSlider changes
   const handleBalanceDateRangeChange = (range) => setBalanceDateRange(range);
   const handlePaymentsDateRangeChange = (range) => setPaymentsDateRange(range);
+  
+  // Update date range depending on the schema (view)
+  const updateDateRange = (schema, range) => {
+    if (schema === 'solde_compte') {
+      // console.log("Update date range of Balance");
+      setBalanceDateRange(range);  // Update balance date range
+    } else if (schema === 'detail_depense') {
+      // console.log("Update date range of Payment");
+      setPaymentsDateRange(range);  // Update payments date range
+    }
+  };
 
   // Filter payments data based on selected date range
   const filteredPaymentsData = useMemo(() => {
@@ -83,7 +97,7 @@ export default function Home() {
 
     const [startDate, endDate] = paymentsDateRange;
 
-    return Object.values(paymentsData).filter(payment => {
+    return Object.values(paymentsData).filter((payment) => {
       const paymentDate = dayjs(payment.date, 'YYYY-MM-DD');
       if (!paymentDate.isValid()) return false;
       return paymentDate.isSameOrAfter(dayjs(startDate)) && paymentDate.isSameOrBefore(dayjs(endDate));
@@ -91,14 +105,27 @@ export default function Home() {
   }, [paymentsDateRange, paymentsData]);
   
   const changeView = (newView) => {
-    setView(newView);
+    // setView(newView);
     // Reset
     /*if (newView === 'balances') {
       setBalanceDateRange([balanceDates[0], balanceDates[balanceDates.length - 1]]);
     } else if (newView === 'payments') {
       setPaymentsDateRange([paymentsDates[0], paymentsDates[paymentsDates.length - 1]]);
     } */
+      // console.log("dwadaw " + newView);
+      if (newView === 'solde_compte' || newView === 'balances') {
+        setView('balances');
+      } else if (newView === 'detail_depense' || newView === 'payments') {
+        setView('payments');
+      } else if (newView === 'categories_depense' || newView === 'expenses') {
+        setView('expenses');
+      }
   };
+
+  if (loading) {
+    // Display loading indicator while data is being fetched
+    return <div>Loading data...</div>;
+  }
 
   return (
     <main className="w-full h-screen">
@@ -123,7 +150,7 @@ export default function Home() {
               />
             </>
           )}
-          {console.log("BROSKI WHY U START "+balanceDates[0])}
+          {/* {console.log("BROSKI WHY U START " + balanceDates[0])} */}
 
           {/* Date Range for Payments */}
           {view === 'payments' && (
@@ -184,7 +211,7 @@ export default function Home() {
           <h3 className="text-xl mb-2">Chat Display</h3>
           <div className="flex flex-col h-full">
             <div className="flex-grow overflow-y-auto">
-              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} updateDateRange={setBalanceDateRange} />
+              <ChatDisplay /*setChartData={setChartData}*/ changeView={changeView} updateDateRange={updateDateRange} />
             </div>
           </div>
         </section>
