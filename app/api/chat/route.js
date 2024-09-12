@@ -1,5 +1,8 @@
-import path from 'path';
-import { promises as fs } from 'fs';
+// import path from 'path';
+// import { promises as fs } from 'fs';
+
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   const { question } = await req.json();
