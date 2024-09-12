@@ -9,7 +9,7 @@ export async function POST(req) {
 
   // Define your external API URL and request body
   const apiUrl = 'https://civision-db-tools-nvyfouhg5a-uc.a.run.app/api/accounting_question';
-  const databaseId = '66e1e63fe93012aa492f66ae'; // Update with your actual database ID
+  const databaseId = '66e35158c04e69b52cfe2b47'; // Update with your actual database ID
 
   // Prepare the request body for the external API
   const requestBody = {
@@ -48,7 +48,7 @@ export async function POST(req) {
 
 export async function GET(req) {
   const apiUrl = 'https://civision-db-tools-nvyfouhg5a-uc.a.run.app/api/accounting_data';
-  const databaseId = '66e1e63fe93012aa492f66ae'; // Update with your actual database ID
+  const databaseId = '66e35158c04e69b52cfe2b47'; // Update with your actual database ID
 
   console.log("FETCHING TIME");
 
