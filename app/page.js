@@ -181,7 +181,7 @@ export default function Home() {
         </section>
         
         {/* Section 2 */}
-        <section className="col-span-7 p-4 bg-gray-300 h-full">
+        <section className="col-span-7 p-4 h-full">
           <h3 className="text-xl mb-2">Vue</h3>
 
           <div className="flex justify-center mb-4">
