@@ -1,17 +1,19 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function ChatBarchart({ data }) {
-  // Aggregate payments by expense type
-  const expenseTypeData = Object.values(data.payments).reduce((acc, payment) => {
-    const type = payment.expense_type;
-    if (acc[type]) {
-      acc[type].amount += payment.amount;  // Sum up amounts by type
-    } else {
-      acc[type] = { ...payment, amount: payment.amount };
-    }
-    return acc;
-  }, {});
+export default function ChatBarchart({ data, selectedExpenseTypes }) {
+  // Aggregate payments by expense type and filter by selectedExpenseTypes
+  const expenseTypeData = Object.values(data.payments)
+    .filter(payment => selectedExpenseTypes.includes(payment.expense_type)) // Apply filtering
+    .reduce((acc, payment) => {
+      const type = payment.expense_type;
+      if (acc[type]) {
+        acc[type].amount += payment.amount;  // Sum up amounts by type
+      } else {
+        acc[type] = { ...payment, amount: payment.amount };
+      }
+      return acc;
+    }, {});
 
   // Convert the object to an array suitable for rendering in the BarChart
   const chartData = Object.keys(expenseTypeData).map(type => ({

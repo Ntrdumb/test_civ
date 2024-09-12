@@ -51,6 +51,7 @@ export default function ChatLinechart({ data, filter, dateRange }) {
   // Extract keys for the line chart (e.g., WF07_balance, WG00_balance)
   const keys = filteredData.length > 0 ? Object.keys(filteredData[0]).filter(key => key !== 'name') : [];
 
+  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#c91c30'];
 
   return (
     <div style={{ width: '100%', height: 300 }}>
@@ -70,9 +71,9 @@ export default function ChatLinechart({ data, filter, dateRange }) {
               key={key}
               type="monotone"
               dataKey={key} // The key now contains the project name (e.g., WF07_balance)
-              stroke={index % 2 === 0 ? '#8884d8' : '#82ca9d'}
+              stroke={colors[index % colors.length]} // Use different colors for each line, cycling through the array
               connectNulls={false} // Set to false to show gaps for missing values
-              dot={{ stroke: '#fff', strokeWidth: 2 }}
+              dot={false}
             />
           ))}
         </LineChart>
