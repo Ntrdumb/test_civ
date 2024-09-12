@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatInput from '../ChatInput';
 
-export default function ChatDisplay({ changeView, updateDateRange }) {
+export default function ChatDisplay({ changeView, updateDateRange, updateSelectedComptes, updateSelectedExpenses }) {
   const [messages, setMessages] = useState([]);
-  const [isBotTyping, setIsBotTyping] = useState(false); // Track if bot is typing
+  const [isBotTyping, setIsBotTyping] = useState(false);
   const chatContainerRef = useRef(null);
 
   const handleSend = async (question) => {
     const userMessage = { type: 'user', text: question };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
-
-    // Lock chat input while bot is fetching an answer
     setIsBotTyping(true);
 
     // Add a typing indicator for the bot
@@ -28,23 +26,31 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
     
     const result = await response.json();
 
-    // Remove the typing indicator after the response is received
+    // Remove typing indicator
     setMessages((prevMessages) =>
       prevMessages.filter((message) => !message.typing)
     );
 
-    if (result.nature === 'statistique') {
-      const botMessage = {
-        type: 'bot',
-        text: result.statistique.texte,
-      };
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
-    } else if (result.nature === 'selection') {
+    if (result.nature === 'selection') {
       changeView(result.schema);
 
-      if (result.selection && result.selection.periode) {
-        const [startDate, endDate] = result.selection.periode;
-        updateDateRange(result.schema, [startDate, endDate]);
+      if (result.selection) {
+        const { comptes, periode } = result.selection;
+        
+        // Handle balances (comptes) selection
+        if (result.schema === 'solde_compte' && comptes && comptes.length > 0) {
+          updateSelectedComptes(comptes);
+        }
+
+        // Handle expenses (categories_depense) selection
+        if (result.schema === 'categories_depense' && comptes && comptes.length > 0) {
+          updateSelectedExpenses(comptes);  // Pass the expense types to Home.js
+        }
+
+        if (periode) {
+          const [startDate, endDate] = periode;
+          updateDateRange(result.schema, [startDate, endDate]);
+        }
       }
 
       const botMessage = {
@@ -60,7 +66,6 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     }
 
-    // Unlock chat input after bot has answered
     setIsBotTyping(false);
   };
 

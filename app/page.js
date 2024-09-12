@@ -1,7 +1,7 @@
 'use client'
 import ChatDisplay from '../components/ChatDisplay';
 // import ChatBarchart from '../components/ChatBarchart';
-// import ChatLinechart from '@/components/ChatLinechart';
+import ChatLinechart from '@/components/ChatLinechart';
 // import ChatPaymentsTable from '@/components/ChatPaymentsTable';
 import DateRangeSlider from '@/components/DateRangeSlider';
 import MultiSelect from '@/components/MultiSelect';
@@ -12,7 +12,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import dynamic from 'next/dynamic';
 import useChartData from '@/hooks/useChartData';
 
-const ChatLinechart = dynamic(() => import('../components/ChatLinechart'));
+// const ChatLinechart = dynamic(() => import('../components/ChatLinechart'));
 const ChatBarchart = dynamic(() => import('../components/ChatBarchart'));
 const ChatPaymentsTable = dynamic(() => import('../components/ChatPaymentsTable'));
 
@@ -59,39 +59,6 @@ export default function Home() {
     return allDates.sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1));
   }, [paymentsData]);
 
-  // // Fetch data from API and cache it in localStorage
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setLoading(true); // Set loading to true when fetching data
-  //     const cachedData = localStorage.getItem('cachedChartData');
-  //     if (cachedData) {
-  //       const parsedData = JSON.parse(cachedData);
-  //       setChartData(parsedData);
-  //       setBalanceSelectedKeys(Object.keys(parsedData.balance));
-
-  //       // Set all expense types as default selected options
-  //       const allExpenseTypes = [...new Set(Object.values(parsedData.payments).map(payment => payment.expense_type))];
-  //       setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
-  //     } else {
-  //       try {
-  //         const response = await fetch('/api/chat');
-  //         const data = await response.json();
-  //         setChartData(data);
-  //         setBalanceSelectedKeys(Object.keys(data.balance));
-
-  //         // Set all expense types as default selected options
-  //         const allExpenseTypes = [...new Set(Object.values(data.payments).map(payment => payment.expense_type))];
-  //         setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
-  //         localStorage.setItem('cachedChartData', JSON.stringify(data));
-  //       } catch (error) {
-  //         console.error('Error fetching data:', error);
-  //       }
-  //     }
-  //     setLoading(false); // Data is fetched, set loading to false
-  //   };
-  //   fetchData();
-  // }, []);
-
   // Handle DateRangeSlider changes
   const handleBalanceDateRangeChange = (range) => setBalanceDateRange(range);
   const handlePaymentsDateRangeChange = (range) => setPaymentsDateRange(range);
@@ -103,6 +70,16 @@ export default function Home() {
     } else if (schema === 'detail_depense') {
       setPaymentsDateRange(range);  // Update payments date range
     }
+  };
+
+  // Handle selection of comptes (from ChatDisplay) and update MultiSelect
+  const updateSelectedComptes = (comptes) => {
+    setBalanceSelectedKeys(comptes);  // Select the comptes from the chatbot response
+  };
+
+  // Update selected expense types from ChatDisplay (categories_depense)
+  const updateSelectedExpenses = (expenseTypes) => {
+    setExpenseSelectedTypes(expenseTypes);  // Update selected expense types
   };
 
   // Filter payments data based on selected date range
@@ -223,7 +200,7 @@ export default function Home() {
           <h3 className="text-xl mb-2">Chat Display</h3>
           <div className="flex flex-col h-full">
             <div className="flex-grow overflow-y-auto">
-              <ChatDisplay changeView={changeView} updateDateRange={updateDateRange} />
+            <ChatDisplay changeView={changeView} updateDateRange={updateDateRange} updateSelectedComptes={updateSelectedComptes} updateSelectedExpenses={updateSelectedExpenses} />
             </div>
           </div>
         </section>
