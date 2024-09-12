@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes dot-wave {
+    0%, 60%, 100% {
+      transform: initial;
+    }
+    30% {
+      transform: translateY(-2px); /* Move the dot up */
+    }
+  }
+  
+  /* Tailwind CSS classes for the animation */
+  .animate-dot-wave {
+    animation: dot-wave 1.2s infinite ease-in-out;
+  }
+  

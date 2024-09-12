@@ -1,27 +1,34 @@
 'use client'
 import ChatDisplay from '../components/ChatDisplay';
-import ChatBarchart from '../components/ChatBarchart';
-import ChatLinechart from '@/components/ChatLinechart';
-import ChatPaymentsTable from '@/components/ChatPaymentsTable';
+// import ChatBarchart from '../components/ChatBarchart';
+// import ChatLinechart from '@/components/ChatLinechart';
+// import ChatPaymentsTable from '@/components/ChatPaymentsTable';
 import DateRangeSlider from '@/components/DateRangeSlider';
 import MultiSelect from '@/components/MultiSelect';
 import { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import dynamic from 'next/dynamic';
+import useChartData from '@/hooks/useChartData';
+
+const ChatLinechart = dynamic(() => import('../components/ChatLinechart'));
+const ChatBarchart = dynamic(() => import('../components/ChatBarchart'));
+const ChatPaymentsTable = dynamic(() => import('../components/ChatPaymentsTable'));
 
 // Extend dayjs with the plugins
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 export default function Home() {
-  const [chartData, setChartData] = useState({ balance: {}, payments: {} });
+  // const [chartData, setChartData] = useState({ balance: {}, payments: {} });
   const [balanceSelectedKeys, setBalanceSelectedKeys] = useState([]);
   const [balanceDateRange, setBalanceDateRange] = useState(null);
   const [paymentsDateRange, setPaymentsDateRange] = useState(null);
   const [expenseSelectedTypes, setExpenseSelectedTypes] = useState([]); // State for expense type filtering
   const [view, setView] = useState('balances');
-  const [loading, setLoading] = useState(true); 
+  // const [loading, setLoading] = useState(true); 
+  const { chartData, loading } = useChartData(setBalanceSelectedKeys, setExpenseSelectedTypes);
 
   const balanceData = chartData.balance;
   const paymentsData = chartData.payments;
@@ -52,38 +59,38 @@ export default function Home() {
     return allDates.sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1));
   }, [paymentsData]);
 
-  // Fetch data from API and cache it in localStorage
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); // Set loading to true when fetching data
-      const cachedData = localStorage.getItem('cachedChartData');
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setChartData(parsedData);
-        setBalanceSelectedKeys(Object.keys(parsedData.balance));
+  // // Fetch data from API and cache it in localStorage
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true); // Set loading to true when fetching data
+  //     const cachedData = localStorage.getItem('cachedChartData');
+  //     if (cachedData) {
+  //       const parsedData = JSON.parse(cachedData);
+  //       setChartData(parsedData);
+  //       setBalanceSelectedKeys(Object.keys(parsedData.balance));
 
-        // Set all expense types as default selected options
-        const allExpenseTypes = [...new Set(Object.values(parsedData.payments).map(payment => payment.expense_type))];
-        setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
-      } else {
-        try {
-          const response = await fetch('/api/chat');
-          const data = await response.json();
-          setChartData(data);
-          setBalanceSelectedKeys(Object.keys(data.balance));
+  //       // Set all expense types as default selected options
+  //       const allExpenseTypes = [...new Set(Object.values(parsedData.payments).map(payment => payment.expense_type))];
+  //       setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
+  //     } else {
+  //       try {
+  //         const response = await fetch('/api/chat');
+  //         const data = await response.json();
+  //         setChartData(data);
+  //         setBalanceSelectedKeys(Object.keys(data.balance));
 
-          // Set all expense types as default selected options
-          const allExpenseTypes = [...new Set(Object.values(data.payments).map(payment => payment.expense_type))];
-          setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
-          localStorage.setItem('cachedChartData', JSON.stringify(data));
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        }
-      }
-      setLoading(false); // Data is fetched, set loading to false
-    };
-    fetchData();
-  }, []);
+  //         // Set all expense types as default selected options
+  //         const allExpenseTypes = [...new Set(Object.values(data.payments).map(payment => payment.expense_type))];
+  //         setExpenseSelectedTypes(allExpenseTypes); // Set default selected expense types
+  //         localStorage.setItem('cachedChartData', JSON.stringify(data));
+  //       } catch (error) {
+  //         console.error('Error fetching data:', error);
+  //       }
+  //     }
+  //     setLoading(false); // Data is fetched, set loading to false
+  //   };
+  //   fetchData();
+  // }, []);
 
   // Handle DateRangeSlider changes
   const handleBalanceDateRangeChange = (range) => setBalanceDateRange(range);

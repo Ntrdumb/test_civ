@@ -3,11 +3,21 @@ import ChatInput from '../ChatInput';
 
 export default function ChatDisplay({ changeView, updateDateRange }) {
   const [messages, setMessages] = useState([]);
+  const [isBotTyping, setIsBotTyping] = useState(false); // Track if bot is typing
   const chatContainerRef = useRef(null);
 
   const handleSend = async (question) => {
     const userMessage = { type: 'user', text: question };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
+
+    // Lock chat input while bot is fetching an answer
+    setIsBotTyping(true);
+
+    // Add a typing indicator for the bot
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { type: 'bot', text: '...', typing: true },
+    ]);
 
     // Send question to the API
     const response = await fetch('/api/chat', {
@@ -17,7 +27,12 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
     });
     
     const result = await response.json();
-    
+
+    // Remove the typing indicator after the response is received
+    setMessages((prevMessages) =>
+      prevMessages.filter((message) => !message.typing)
+    );
+
     if (result.nature === 'statistique') {
       const botMessage = {
         type: 'bot',
@@ -25,12 +40,11 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
       };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     } else if (result.nature === 'selection') {
-      changeView(result.schema);  // Assuming changeView changes the UI based on result
+      changeView(result.schema);
 
       if (result.selection && result.selection.periode) {
         const [startDate, endDate] = result.selection.periode;
-        // console.log(startDate, endDate);
-        updateDateRange(result.schema, [startDate, endDate]); // Pass schema and dates
+        updateDateRange(result.schema, [startDate, endDate]);
       }
 
       const botMessage = {
@@ -45,6 +59,9 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
       };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     }
+
+    // Unlock chat input after bot has answered
+    setIsBotTyping(false);
   };
 
   useEffect(() => {
@@ -68,15 +85,25 @@ export default function ChatDisplay({ changeView, updateDateRange }) {
               className={`max-w-xs w-full p-3 rounded-lg ${
                 message.type === 'user' ? 'bg-civision-green text-white rounded-br-none' : 'bg-gray-300 text-black rounded-bl-none'
               }`}
-              style={{ wordWrap: "break-word" }}  // Ensure text breaks within the container
+              style={{ wordWrap: "break-word" }}
             >
-              <p className="text-sm font-bold text-gray-600">{message.type === 'bot' ? 'Chatbot' : 'You'}</p>
-              <p>{message.text}</p>
+              <p className="text-sm font-bold text-gray-600">
+                {message.type === 'bot' ? 'Chatbot' : 'You'}
+              </p>
+              {message.typing ? (
+                <div className="flex space-x-1">
+                  <span className="dot bg-gray-500 rounded-full w-2 h-2 animate-dot-wave"></span>
+                  <span className="dot bg-gray-500 rounded-full w-2 h-2 animate-dot-wave delay-150"></span>
+                  <span className="dot bg-gray-500 rounded-full w-2 h-2 animate-dot-wave delay-250"></span>
+                </div>
+              ) : (
+                <p>{message.text}</p>
+              )}
             </div>
           </div>
         ))}
       </div>
-      <ChatInput onSend={handleSend} />
+      <ChatInput onSend={handleSend} isDisabled={isBotTyping} />
     </div>
   );
 }

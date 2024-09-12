@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 
-export default function ChatInput({ onSend }) {
+export default function ChatInput({ onSend, isDisabled }) {  // Accept the new prop
   const [input, setInput] = useState('');
   const textAreaRef = useRef(null);
 
@@ -16,17 +16,15 @@ export default function ChatInput({ onSend }) {
     adjustHeight();
   };
 
-  // Send
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {  // Check if Enter is pressed without the Shift key
-      e.preventDefault();  // Prevent the default action to stop adding a new line
-      handleSubmit(e);  // Manually trigger the submit handler
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
-  // Jump line
   const handleSubmit = (e) => {
-    e.preventDefault();  // This stops the form from submitting through traditional HTML submit
+    e.preventDefault();
     if (input.trim()) {
       onSend(input);
       setInput('');
@@ -44,10 +42,15 @@ export default function ChatInput({ onSend }) {
         placeholder="Posez une question..."
         value={input}
         onChange={handleChange}
-        onKeyDown={handleKeyPress}  // Add the key down event handler
+        onKeyDown={handleKeyPress}
         style={{ minHeight: '20px', overflow: 'hidden' }}
+        disabled={isDisabled}  // Disable textarea if bot is typing
       />
-      <button type="submit" className="bg-civision-green text-white p-2 rounded">
+      <button
+        type="submit"
+        className={`bg-civision-green text-white p-2 rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={isDisabled}  // Disable button if bot is typing
+      >
         Send
       </button>
     </form>
