@@ -31,7 +31,14 @@ export default function ChatDisplay({ changeView, updateDateRange, updateSelecte
       prevMessages.filter((message) => !message.typing)
     );
 
-    if (result.nature === 'selection') {
+    if (result.nature === 'statistique') {
+      const botMessage = {
+        type: 'bot',
+        text: result.statistique.texte,
+      };
+      setMessages((prevMessages) => [...prevMessages, botMessage]);
+    } 
+    else if (result.nature === 'selection') {
       changeView(result.schema);
 
       if (result.selection) {
@@ -58,7 +65,8 @@ export default function ChatDisplay({ changeView, updateDateRange, updateSelecte
         text: "Voici ce que j'ai trouvé.",
       };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
-    } else {
+    } 
+    else {
       const botMessage = {
         type: 'bot',
         text: "Je n'ai pas compris votre demande.",
